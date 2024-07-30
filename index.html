@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>News Recommender</title>
+    <style>
+        /* Global styles */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  background-color: #f2f2f2;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+  background-color: white;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+  border-radius: 5px;
+}
+
+h1 {
+  font-size: 2rem;
+  margin-top: 0;
+}
+
+p {
+  font-size: 1.2rem;
+}
+
+input[type="number"],
+input[type="text"] {
+  width: 60%;
+  padding: 0.5rem;
+  margin-right: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 5px;
+  border: none;
+  background-color: #f2f2f2;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+button {
+  padding: 0.5rem 1rem;
+  font-size: 1.2rem;
+  border: none;
+  border-radius: 5px;
+  background-color: #333;
+  color: white;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #444;
+}
+
+ul {
+  margin-top: 1rem;
+  padding-left: 1rem;
+  list-style: none;
+}
+
+li {
+  font-size: 1.2rem;
+  margin-bottom: 0.5rem;
+  position: relative;
+  padding-left: 2rem;
+  line-height: 1.4;
+}
+
+li:before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.5rem;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  background-color: #333;
+}
+
+button:nth-of-type(2n) {
+  margin-left: 1rem;
+}
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>News Recommender</h1>
+        <p>Enter an index to get recommendations:</p>
+        <input type="number" id="indexInput" placeholder="Enter index">
+        <button onclick="fetchIndexRecommendations()">Get Recommendations by Index</button>
+        <p>Enter a word to get recommendations:</p>
+        <input type="text" id="wordInput" placeholder="Enter word">
+        <button onclick="fetchWordRecommendations()">Get Recommendations by Word</button>
+        <p>Enter a word and category to get recommendations:</p>
+        <input type="text" id="wordCategoryInput" placeholder="Enter word">
+        <input type="text" id="categoryInput" placeholder="Enter category">
+        <button onclick="fetchWordCategoryRecommendations()">Get Recommendations by Word and Category</button>
+        <ul id="recommendations"></ul>
+    </div>
+    <script>
+        // Add a new function to fetch recommendations based on the index
+        async function fetchIndexRecommendations() {
+            const index = document.getElementById('indexInput').value;
+            const response = await fetch('/api/recommend', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ index }),
+            });
+
+            if (!response.ok) {
+                alert('Error fetching recommendations');
+                return;
+            }
+
+            const data = await response.json();
+            const recommendationsList = document.getElementById('recommendations');
+            recommendationsList.innerHTML = '';
+
+            data.news.forEach((news, i) => {
+                const listItem = document.createElement('li');
+                listItem.textContent = `${i + 1}. ${news}`;
+                recommendationsList.appendChild(listItem);
+                
+            });
+            currentRecommendations = data;
+            // data.news.forEach((news, i) => {
+            //     const listItem = document.createElement('li');
+            //     listItem.textContent = `${i + 1}. ${news} `;
+                
+            //     const notRelevantButton = document.createElement('button');
+            //     notRelevantButton.textContent = 'Not relevant';
+            //     notRelevantButton.onclick = () => sendNotRelevant('index', currentRecommendations, i);
+            //     listItem.appendChild(notRelevantButton);
+
+            //     recommendationsList.appendChild(listItem);
+            // });
+        }
+        let lastQuery=null;
+
+        // Add a new function to fetch recommendations based on the word
+        async function fetchWordRecommendations() {
+            const word = document.getElementById('wordInput').value;
+            lastQuery=word;
+            const response = await fetch('/api/recommend', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ word }),
+            });
+
+            if (!response.ok) {
+                alert('Error fetching recommendations');
+                return;
+            }
+
+            const data = await response.json();
+            const recommendationsList = document.getElementById('recommendations');
+            recommendationsList.innerHTML = '';
+
+            // data.news.forEach((news, i) => {
+            //     const listItem = document.createElement('li');
+            //     listItem.textContent = `${i + 1}. ${news}`;
+            //     recommendationsList.appendChild(listItem);
+            // });
+            
+            currentRecommendations = data;
+            
+            data.news.forEach((news, i) => {
+                const listItem = document.createElement('li');
+                listItem.textContent = `${i + 1}. ${news} `;
+                
+                const notRelevantButton = document.createElement('button');
+                notRelevantButton.textContent = 'Not relevant';
+                notRelevantButton.onclick = () => sendNotRelevant('word', currentRecommendations, i);
+                listItem.appendChild(notRelevantButton);
+
+                recommendationsList.appendChild(listItem);
+            });
+        }
+
+        async function fetchWordCategoryRecommendations() {
+            const word = document.getElementById('wordCategoryInput').value;
+            const category = document.getElementById('categoryInput').value;
+            const response = await fetch('/api/recommend', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ word, category }),
+            });
+
+            if (!response.ok) {
+                alert('Error fetching recommendations');
+                return;
+            }
+
+            const data = await response.json();
+            const recommendationsList = document.getElementById('recommendations');
+            recommendationsList.innerHTML = '';
+
+            data.news.forEach((news, i) => {
+                const listItem = document.createElement('li');
+                listItem.textContent = `${i + 1}. ${news}`;
+                recommendationsList.appendChild(listItem);
+            });
+            currentRecommendations = data;
+        //     data.news.forEach((news, i) => {
+        //     const listItem = document.createElement('li');
+        //     listItem.textContent = `${i + 1}. ${news}`;
+        //     const notRelevantButton = document.createElement('button');
+        //     notRelevantButton.textContent = 'Not relevant';
+        //     notRelevantButton.onclick = () => sendNotRelevant('wordCategory', currentRecommendations, i);
+        //     listItem.appendChild(notRelevantButton);
+
+        //     recommendationsList.appendChild(listItem);
+        // });
+        }
+
+        async function sendNotRelevant(queryType, recommendations, notRelevantIndex) {
+    let query = null;
+    console.log(recommendations);
+    if (queryType === 'index') {
+        query = document.getElementById('indexInput').value;
+    } else if (queryType === 'word') {
+        
+        query = document.getElementById('wordInput').value;
+        
+        // query=lastQuery;
+    } else if (queryType === 'wordCategory') {
+        query = {
+            word: document.getElementById('wordCategoryInput').value,
+            category: document.getElementById('categoryInput').value
+        };
+    }
+    // query='trump'
+    // if (query && typeof query === 'object') {
+    //     query = query.word;
+    // }
+    console.log(query);
+    // if (!query) {
+    //     console.error('Invalid query');
+    //     return;
+    // }
+    // query='trump'
+    const response = await fetch('/not_relevant', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            query: query,
+            recommendations: recommendations.news,
+            // recommendations:improvedRecommendations.news,
+            not_relevant_indices: [notRelevantIndex]
+        })
+
+    });
+
+    if (!response.ok) {
+        // alert(response)
+        // alert('Error updating recommendations');
+        return;
+    }
+
+    const improvedRecommendations = await response.json();
+    
+    currentRecommendations = improvedRecommendations;
+    // alert(JSON.stringify(currentRecommendations,null,2));
+
+    const recommendationsList = document.getElementById('recommendations');
+    recommendationsList.innerHTML = '';
+
+    improvedRecommendations.news.forEach((news, i) => {
+        const listItem = document.createElement('li');
+        listItem.textContent = `${i + 1}. ${news} `;
+        
+        const notRelevantButton = document.createElement('button');
+        notRelevantButton.textContent = 'Not relevant';
+        notRelevantButton.onclick = () => sendNotRelevant('word', currentRecommendations, i);
+        listItem.appendChild(notRelevantButton);
+
+        recommendationsList.appendChild(listItem);
+    });
+}
+
+    
+
+    </script>
+</body>
+</html>
